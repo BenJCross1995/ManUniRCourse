@@ -160,3 +160,40 @@ cats2 <- read_csv("data/feline-data_v2.csv", col_types = cols(
   weight = col_double(),
   likes_string = col_logical()
 ) )
+
+#----EXPLORING TIBBLES----# ####
+
+cats$weight # Access column
+
+cats[1:2,2:3] # Return first two rows and last two columns
+
+# Sub-setting with square brackets returns a tibble, using $
+# returns a vector.
+
+final_data <- cats[,c(1,3)]
+
+write_csv(final_data, "data/final_data.csv")
+
+
+#----------MANIPULATING TIBBLES WITH DPLYR----------#
+
+#----LOAD DATA----# ####
+library(tidyverse)
+
+# Read gapminder data
+gapminder <- read_csv("data/gapminder-FiveYearData.csv")
+
+#----DPLYR PACKAGE----# ####
+
+# Select()
+year_country_gdp <- select(gapminder, year, country, 
+                           gdpPercap)
+
+# Filter()
+gapminder_europe <- filter(gapminder,
+                           continent == "Europe")
+
+# Pipe Operator
+gapminder_ar <- gapminder %>%
+  filter(continent == "Europe") %>%
+  select(year, country, gdpPercap)
