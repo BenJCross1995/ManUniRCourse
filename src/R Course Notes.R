@@ -331,3 +331,35 @@ gapminder %>%
   facet_wrap(~continent, ncol = 1, scales = 'free')
 
 ggsave("plots/myplot.png")
+
+
+#--------------6 - MODEL FITTING IN R--------------#
+
+#----PREPARE DATA----# ####
+gapminder_uk <- gapminder%>%
+  filter(country == "United Kingdom")
+
+#----PLOT----# ####
+gapminder_uk %>%
+  ggplot(aes(y = gdpPercap, x = year)) +
+  geom_point()
+
+#----LINEAR MODEL----# ####
+ukgdp_model <- lm(gdpPercap ~ year, data = gapminder_uk)
+print(ukgdp_model)
+
+summary(ukgdp_model)
+
+#----MODEL PREDICTIONS----# ####
+library(modelr)
+
+gapminder_uk %>% 
+  add_predictions(ukgdp_model) %>% 
+  ggplot(aes(x=year, y=pred)) + geom_line() +
+  geom_point(aes(y=gdpPercap))
+
+#----MODEL CHECKING - PLOTTING RESIDUALS----# ####
+gapminder_uk %>% 
+  add_residuals(ukgdp_model) %>% 
+  ggplot(aes(x = year, y = resid)) +
+  geom_point()
