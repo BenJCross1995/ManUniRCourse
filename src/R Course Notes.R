@@ -5,11 +5,13 @@
 
 # Course Notes - https://uomresearchit.github.io/r-tidyverse-intro/setup/
 # Google Docs - https://docs.google.com/document/d/1nFisfUKHSrZeAkEKCVKBEhnhduB_cNzoZ65VBsGYqPQ/edit
+# Questions - https://pad.carpentries.org/2023-04-13-rit-online
+
 setwd("C:/Users/bencros/Documents/GitHub/ManUniRCourse/")
 
 #--------------------DAY 1--------------------#
 
-#----------INTRODUCTION TO R AND RSTUDIO----------#
+#----------1 - INTRODUCTION TO R AND RSTUDIO----------#
 #----MATHEMATICAL FUNCTIONS----# ####
 
 sin(1) # Trigonometry
@@ -137,6 +139,8 @@ my_vector[my_vector > 0.5] # To get values greater than 0.5
 
 #----------LOADING DATA INTO R----------#
 
+
+#--------------3 - LOADING DATA INTO R---------------#
 #----LOADING DATA----# ####
 
 library(readr)
@@ -177,6 +181,9 @@ write_csv(final_data, "data/final_data.csv")
 
 #----------MANIPULATING TIBBLES WITH DPLYR----------#
 
+
+
+#--------4 - MANIPULATING TIBBLES WITH DPLYR---------#
 #----LOAD DATA----# ####
 library(tidyverse)
 
@@ -185,15 +192,142 @@ gapminder <- read_csv("data/gapminder-FiveYearData.csv")
 
 #----DPLYR PACKAGE----# ####
 
-# Select()
+#----SELECT----# ####
 year_country_gdp <- select(gapminder, year, country, 
                            gdpPercap)
 
-# Filter()
+#----FILTER----# ####
 gapminder_europe <- filter(gapminder,
                            continent == "Europe")
 
-# Pipe Operator
+#----PIPE OPERATOR----# ####
 gapminder_ar <- gapminder %>%
   filter(continent == "Europe") %>%
   select(year, country, gdpPercap)
+
+#----USING IN----# ####
+gapminder %>%
+  filter(country %in% c("Denmark", "Norway", "Sweden"))
+
+#----ARRANGE----# ####
+gapminder %>%
+  filter(continent == "Europe", year == 2007) %>%
+  arrange(desc(pop))
+
+#----MUTATE----# ####
+gapminder_gdp <- gapminder %>%
+  mutate(gdp = gdpPercap * pop)
+
+gapminder_log <- gapminder %>%
+  mutate(logGdpPerCap = log(gdpPercap))
+
+#----SUMMARISE----# ####
+gapminder_le <- gapminder %>%
+  filter(year == 2007) %>%
+  summarise(meanlife = mean(lifeExp))
+
+#----GROUP BY----# ####
+gapminder_by_le <- gapminder %>%
+  filter(year == 2007) %>%
+  group_by(continent) %>%
+  summarise(meanlife = mean(lifeExp)) %>%
+  arrange(desc(meanlife))
+
+#----N----# ####
+gapminder %>%
+  filter(year == 2002) %>%
+  group_by(continent) %>%
+  summarise(se_pop = sd(pop)/sqrt(n())) %>%
+  arrange(desc(se_pop))
+
+#----N VS COUNT----# ####
+gapminder %>%
+  filter(year == 2002) %>%
+  group_by(continent) %>%
+  summarise(n.obs = n())
+
+gapminder %>%
+  filter(year == 2002) %>%
+  count(continent, sort = TRUE)
+
+#----IF ELSE----# ####
+gapminder %>%
+  mutate(gdp = ifelse(lifeExp > 50, gdpPercap * pop, NA))
+
+#----QUESTIONS----# ####
+
+# Find the number of rows for Africa
+gap_af <- gapminder %>%
+  filter(continent == "Africa") %>%
+  select(lifeExp, country, year)
+nrow(gap_af)
+
+# Rank by life expectancy in Europe in 2007 - lowest = 1
+gapminder %>%
+  filter(continent == "Europe" & year == 2007) %>%
+  mutate(rank = rank(lifeExp)) %>%
+  arrange(rank)
+
+# Reverse so highest life expectancy is 1
+gapminder %>%
+  filter(continent == "Europe" & year == 2007) %>%
+  mutate(rank = rank(desc(lifeExp))) %>%
+  arrange(rank)
+        
+# Mean life expectancy 
+gapminder %>%
+  group_by(continent, year) %>%
+  summarise(avg_life_exp = mean(lifeExp))
+         
+
+#-----5 - CREATING PUBLICATION-QUALITY GRAPHICS-----#
+#----GGPLOT2----# ####
+gapminder <- read_csv("data/gapminder-FiveYearData.csv")
+
+ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp)) +
+  geom_point()
+
+#----COMBINING DPLYR AND GGPLOT2----# ####
+gapminder %>%
+  ggplot(aes(x = gdpPercap, y = lifeExp)) +
+  geom_point()
+
+#----QUESTIONS----# ####
+# Question 1
+ggplot(data = gapminder, aes(x = year, y = lifeExp)) +
+  geom_point()
+
+# Question 2
+ggplot(data = gapminder, aes(x = year, y = lifeExp)) +
+  geom_point(aes(colour = continent))
+
+# Question 3
+gapminder %>%
+  ggplot(aes(x = year,
+             y = gdpPercap,
+             colour = continent,
+             group = country)) +
+  geom_line()
+
+gapminder %>%
+  ggplot(aes(x = year, y = gdpPercap,
+             colour = continent, group = country)) +
+  geom_line() +
+  facet_wrap(~continent, ncol = 1,
+             scales = 'free')
+
+# Question 4
+gapminder %>%
+  group_by(continent, year) %>%
+  summarise(avg_gdp = mean(gdpPercap)) %>%
+  ggplot(aes(x = year, y = avg_gdp, colour = continent)) +
+  geom_line()
+
+# Question 5
+gapminder %>%
+  ggplot(aes(x = year, y = log(gdpPercap), colour = continent,
+             group = country)) +
+  geom_line() +
+  facet_wrap(~continent, ncol = 1, scales = 'free')
+
+ggsave("plots/myplot.png")
